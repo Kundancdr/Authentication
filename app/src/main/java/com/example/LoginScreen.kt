@@ -35,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +47,10 @@ import com.example.authenticationdemo.R
 @Composable
 fun LoginScreen(modifier: Modifier = Modifier) {
     var isLoginWithMobile by remember { mutableStateOf(true) }
+    var password by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var mobileNumber by remember { mutableStateOf("") }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -53,15 +58,15 @@ fun LoginScreen(modifier: Modifier = Modifier) {
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.SpaceAround
     ) {
-        Column (
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-        ){
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Image(
                 painter = painterResource(R.drawable.image),
                 contentDescription = null,
                 modifier = Modifier
-                    .fillMaxWidth()
                     .fillMaxWidth(0.25f)
                     .size(50.dp)
                     .padding(top = 10.dp)
@@ -71,76 +76,45 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
             Text(
                 text = "Welcome Back! Glad To \n        See You, Again",
-
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 20.sp,
                 fontFamily = FontFamily.Serif
-
             )
         }
 
-        Box(
-            modifier = Modifier
-                .padding(vertical = 12.dp)
-                .background(Color.White, shape = MaterialTheme.shapes.large)
-                .border(1.dp, color = Color.LightGray)
-                .clip(MaterialTheme.shapes.large)
-                .padding(1.dp)
 
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(
-                    onClick = { isLoginWithMobile = true },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(38.dp)
-                        .background(
-                            if (isLoginWithMobile) Color.LightGray else Color.Transparent
-                        ),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    )
-                ) {
-                    Text(text = "Phone number", color =  Color.Black)
-                }
-
-                Button(
-                    onClick = { isLoginWithMobile = false },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(38.dp)
-                        .background(
-                            if (!isLoginWithMobile) Color.LightGray else Color.Transparent
-                        ),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    )
-                ) {
-                    Text(text = "Email", color = Color.Black)
-                }
-            }
+        ToggleLoginOption(isLoginWithMobile) {
+            isLoginWithMobile = it
         }
 
 
         if (isLoginWithMobile) {
-            MobileNumberField()
+            InputField(
+                label = "Mobile Number",
+                value = mobileNumber,
+                onValueChange = { mobileNumber = it },
+                leadingText = "+91"
+            )
         } else {
-            EmailField()
+            InputField(
+                label = "Email",
+                value = email,
+                onValueChange = { email = it }
+            )
         }
 
 
-       // MobileNumberField()
-       // Spacer(modifier = Modifier.height(8.dp))
-        PasswordField()
-        Spacer(modifier = Modifier.height(5.dp))
+        InputField(
+            label = "Password",
+            value = password,
+            onValueChange = { password = it },
+            isPassword = true
+        )
+
 
         Button(
-            onClick = { },
-            modifier = Modifier
-                .fillMaxWidth(),
+            onClick = {  },
+            modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.small
         ) {
             Text(
@@ -151,50 +125,12 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         }
 
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Divider(
-                modifier = Modifier.weight(1f),
-                color = Color.Gray.copy(alpha = 0.5f),
-                thickness = 1.dp
-            )
-
-            Text(
-                text = "Or",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .alpha(0.5f)
-            )
-
-            Divider(
-                modifier = Modifier.weight(1f),
-                color = Color.Gray.copy(alpha = 0.5f),
-                thickness = 1.dp
-            )
-        }
+        DividerSection()
 
 
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.Center
-        ) {
-            AuthOption(image = R.drawable.google, text = "Login With Google")
-            Spacer(modifier = Modifier.height(10.dp))
-            AuthOption(image = R.drawable.facebook, text = "Login With Facebook")
-            Spacer(modifier = Modifier.height(10.dp))
-            AuthOption(
-                image = R.drawable.apple,
-                tint = MaterialTheme.colorScheme.onBackground,text = "Login With Apple"
-            )
+        AuthenticationOptions()
 
-        }
-
-
-        Row(
+                Row(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text(
@@ -211,7 +147,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
         Box(
             modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center 
+            contentAlignment = Alignment.Center
         ) {
             Divider(
                 modifier = Modifier
@@ -220,94 +156,109 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 thickness = 4.dp
             )
         }
-
-        Spacer(modifier = Modifier.height(1.dp))
     }
 }
 
 @Composable
-fun MobileNumberField() {
+fun InputField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    isPassword: Boolean = false,
+    leadingText: String? = null
+) {
     Column(modifier = Modifier.padding(horizontal = 10.dp)) {
-
         Text(
-            text = "Mobile Number",
+            text = label,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp,
             modifier = Modifier.padding(bottom = 3.dp)
         )
 
-
         OutlinedTextField(
-            value = "",
-            onValueChange = {  },
-            label = { Text("Enter phone number") },
-            modifier = Modifier.fillMaxWidth()
-                .height(42.dp),
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text("Enter $label") },
+            modifier = Modifier
+                .fillMaxWidth(),
             singleLine = true,
-            leadingIcon = {
-
-                Box(modifier = Modifier.padding(end = 3.dp)) {
-                    Text(
-                        text = "+91",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                }
+            visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+            leadingIcon = leadingText?.let {
+                { Text(text = it, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.padding(end = 3.dp)) }
             },
             shape = MaterialTheme.shapes.small
         )
     }
 }
 
-
-
 @Composable
-fun EmailField() {
-
-    Column (modifier = Modifier.padding(horizontal = 10.dp)){
-
-        Text(
-            text = "Email",
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp,
-            modifier = Modifier.padding(bottom = 3.dp)
-        )
-
-        OutlinedTextField(
-        value = "",
-        onValueChange = { /* Handle email text change */ },
-        label = { Text("Enter your email") },
-        modifier = Modifier.fillMaxWidth()
-            .height(42.dp),
-        singleLine = true,
-            shape = MaterialTheme.shapes.small
-    )
+fun ToggleLoginOption(isLoginWithMobile: Boolean, onToggle: (Boolean) -> Unit) {
+    Box(
+        modifier = Modifier
+            .padding(vertical = 12.dp)
+            .background(Color.White, shape = MaterialTheme.shapes.large)
+            .border(1.dp, color = Color.LightGray)
+            .clip(MaterialTheme.shapes.large)
+            .padding(1.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(
+                onClick = { onToggle(true) },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(38.dp)
+                    .background(if (isLoginWithMobile) Color.LightGray else Color.Transparent),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+            ) {
+                Text(text = "Phone number", color = Color.Black)
+            }
+            Button(
+                onClick = { onToggle(false) },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(38.dp)
+                    .background(if (!isLoginWithMobile) Color.LightGray else Color.Transparent),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+            ) {
+                Text(text = "Email", color = Color.Black)
+            }
         }
-}
-
-@Composable
-fun PasswordField() {
-    Column (modifier = Modifier.padding(horizontal = 10.dp)){
-
-        Text(
-            text = "Password",
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp,
-            modifier = Modifier.padding(bottom = 3.dp)
-        )
-
-
-        OutlinedTextField(
-            value = "",
-            onValueChange = {  },
-            label = { Text("Enter password") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(42.dp),
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            shape = MaterialTheme.shapes.small
-        )
-
     }
 }
+
+@Composable
+fun DividerSection() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Divider(modifier = Modifier.weight(1f), color = Color.Gray.copy(alpha = 0.5f), thickness = 1.dp)
+        Text(
+            text = "Or",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 8.dp).alpha(0.5f)
+        )
+        Divider(modifier = Modifier.weight(1f), color = Color.Gray.copy(alpha = 0.5f), thickness = 1.dp)
+    }
+}
+
+@Composable
+fun AuthenticationOptions() {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.Center
+    ) {
+        AuthOption(image = R.drawable.google, text = "Login With Google")
+        Spacer(modifier = Modifier.height(10.dp))
+        AuthOption(image = R.drawable.facebook, text = "Login With Facebook")
+        Spacer(modifier = Modifier.height(10.dp))
+        AuthOption(image = R.drawable.apple, tint = MaterialTheme.colorScheme.onBackground, text = "Login With Apple")
+    }
+}
+
+
+
